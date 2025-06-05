@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beautiful Photo Gallery</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">Shareef Bachhe 😊</div>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#gallery">Gallery</a></li>
+                <li><a href="#close-friends">Close Friends</a></li>
+                <li><a href="#about">About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="hero">
+            <h1>Not So Shareef Bachhe 😏</h1>
+            <p>Capturing precious moments and memories</p>
+        </section>
+
+        <section id="gallery" class="gallery-section">
+            <h2>Photo Gallery</h2>
+            <div class="gallery-grid">
+                <!-- Gallery images will be added here -->
+            </div>
+        </section>
+
+        <section id="close-friends" class="carousel-section">
+            <h2>Close Friends Collection</h2>
+            <div class="carousel-container">
+                <button class="carousel-button prev"><i class="fas fa-chevron-left"></i></button>
+                <div class="carousel">
+                    <!-- Carousel images will be added here -->
+                </div>
+                <button class="carousel-button next"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </section>
+
+        <section id="about" class="about-section">
+            <h2>About Our Gallery</h2>
+            <p>Welcome to our beautiful photo gallery where we showcase our most precious moments and memories.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Shareef Bachhe 😊. All rights reserved.</p>
+    </footer>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+        <span class="close-lightbox">&times;</span>
+        <img class="lightbox-content" id="lightbox-img">
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
