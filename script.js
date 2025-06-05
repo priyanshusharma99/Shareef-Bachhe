@@ -358,10 +358,16 @@ function initLightbox() {
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightbox-img');
     const closeLightbox = document.querySelector('.close-lightbox');
+    const downloadLightbox = document.getElementById('download-lightbox'); // Get the download link element
 
     // Function to open lightbox
     function openLightbox(imageSrc) {
         lightboxImg.src = imageSrc;
+        downloadLightbox.href = imageSrc; // Set the download link href to the image source
+        // Optionally, set the download attribute value for a suggested filename
+        const filename = imageSrc.split('/').pop(); // Extract filename from path/URL
+        downloadLightbox.download = filename || 'downloaded_image.jpg'; // Set download filename
+
         lightbox.classList.add('active');
         document.body.style.overflow = 'hidden'; // Prevent scrolling when lightbox is open
     }
@@ -370,6 +376,8 @@ function initLightbox() {
     function closeLightboxHandler() {
         lightbox.classList.remove('active');
         document.body.style.overflow = ''; // Restore scrolling
+        lightboxImg.src = ''; // Clear image source when closing
+        downloadLightbox.href = ''; // Clear download link when closing
     }
 
     // Add click event to gallery images
@@ -385,9 +393,9 @@ function initLightbox() {
     // Close lightbox when clicking the close button
     closeLightbox.addEventListener('click', closeLightboxHandler);
 
-    // Close lightbox when clicking outside the image
+    // Close lightbox when clicking outside the image (and not on the download link)
     lightbox.addEventListener('click', (e) => {
-        if (e.target === lightbox) {
+        if (e.target === lightbox || e.target === closeLightbox) {
             closeLightboxHandler();
         }
     });
@@ -407,7 +415,9 @@ document.addEventListener('DOMContentLoaded', () => {
     populateGallery();
     populateCarousel();
     initCarousel();
-    initLightbox();
+    populateGallery(); // Populate gallery again to add event listeners after images are added
+    populateCarousel(); // Populate carousel again to add event listeners after images are added
+    initLightbox(); 
 });
 
 // Smooth scrolling for navigation links
@@ -418,4 +428,40 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             behavior: 'smooth'
         });
     });
+});
+
+// Ensure lightbox is initialized after images are loaded into the DOM
+document.addEventListener('DOMContentLoaded', () => {
+    // Initial population
+    populateGallery();
+    populateCarousel();
+
+    // Use a MutationObserver to watch for when images are added to the DOM
+    const observer = new MutationObserver((mutationsList, observer) => {
+        for(const mutation of mutationsList) {
+            if (mutation.type === 'childList' && (mutation.addedNodes.length > 0)) {
+                // If images are added, initialize lightbox functionality
+                initLightbox();
+                // Once initialized, we can disconnect the observer if we only need to do it once
+                // observer.disconnect(); 
+                return; // Exit after initializing
+            } else if (mutation.type === 'childList' && mutation.target.classList.contains('carousel') && mutation.addedNodes.length > 0) {
+                 initLightbox(); // Also initialize if carousel items are added dynamically
+                 return;
+            }
+        }
+    });
+
+    // Observe the gallery and carousel containers for changes in their child list
+    const galleryGrid = document.querySelector('.gallery-grid');
+    const carouselContainer = document.querySelector('.carousel');
+    
+    if(galleryGrid) observer.observe(galleryGrid, { childList: true });
+    if(carouselContainer) observer.observe(carouselContainer, { childList: true });
+
+
+    initHamburgerMenu();
+    initHeroSlideshow();
+    initCarousel();
+    
 }); 
