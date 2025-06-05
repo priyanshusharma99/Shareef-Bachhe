@@ -359,17 +359,38 @@ function initLightbox() {
     const lightboxImg = document.getElementById('lightbox-img');
     const closeLightbox = document.querySelector('.close-lightbox');
     const downloadLightbox = document.getElementById('download-lightbox'); // Get the download link element
+    let currentImageBlobUrl = null; // To store the blob URL for cleanup
 
     // Function to open lightbox
-    function openLightbox(imageSrc) {
+    async function openLightbox(imageSrc) {
         lightboxImg.src = imageSrc;
-        downloadLightbox.href = imageSrc; // Set the download link href to the image source
-        // Optionally, set the download attribute value for a suggested filename
-        const filename = imageSrc.split('/').pop(); // Extract filename from path/URL
-        downloadLightbox.download = filename || 'downloaded_image.jpg'; // Set download filename
-
         lightbox.classList.add('active');
         document.body.style.overflow = 'hidden'; // Prevent scrolling when lightbox is open
+
+        // Handle download link
+        if (currentImageBlobUrl) {
+            URL.revokeObjectURL(currentImageBlobUrl); // Clean up previous blob URL
+            currentImageBlobUrl = null;
+        }
+
+        try {
+            // Fetch the image data
+            const response = await fetch(imageSrc);
+            const blob = await response.blob();
+            
+            // Create a blob URL and set it to the download link
+            currentImageBlobUrl = URL.createObjectURL(blob);
+            downloadLightbox.href = currentImageBlobUrl;
+            
+            // Set the download attribute value for a suggested filename
+            const filename = imageSrc.split('/').pop() || 'downloaded_image.jpg'; // Extract filename
+            downloadLightbox.download = filename;
+            downloadLightbox.style.display = 'flex'; // Show the download button
+
+        } catch (error) {
+            console.error('Failed to create downloadable link:', error);
+            downloadLightbox.style.display = 'none'; // Hide download button on error
+        }
     }
 
     // Function to close lightbox
@@ -378,6 +399,13 @@ function initLightbox() {
         document.body.style.overflow = ''; // Restore scrolling
         lightboxImg.src = ''; // Clear image source when closing
         downloadLightbox.href = ''; // Clear download link when closing
+        downloadLightbox.style.display = 'none'; // Hide download button
+        
+        // Clean up blob URL
+        if (currentImageBlobUrl) {
+            URL.revokeObjectURL(currentImageBlobUrl);
+            currentImageBlobUrl = null;
+        }
     }
 
     // Add click event to gallery images
@@ -415,9 +443,8 @@ document.addEventListener('DOMContentLoaded', () => {
     populateGallery();
     populateCarousel();
     initCarousel();
-    populateGallery(); // Populate gallery again to add event listeners after images are added
-    populateCarousel(); // Populate carousel again to add event listeners after images are added
-    initLightbox(); 
+    // The lightbox initialization should happen after the images are added to the DOM
+    // This is now handled by the MutationObserver below
 });
 
 // Smooth scrolling for navigation links
@@ -441,12 +468,25 @@ document.addEventListener('DOMContentLoaded', () => {
         for(const mutation of mutationsList) {
             if (mutation.type === 'childList' && (mutation.addedNodes.length > 0)) {
                 // If images are added, initialize lightbox functionality
-                initLightbox();
-                // Once initialized, we can disconnect the observer if we only need to do it once
-                // observer.disconnect(); 
-                return; // Exit after initializing
+                // Check if the added node is an image or contains images
+                const imagesAdded = Array.from(mutation.addedNodes).some(node => 
+                    node.tagName === 'IMG' || node.querySelector('img')
+                );
+                if (imagesAdded) {
+                     initLightbox();
+                     // Optionally disconnect if you only need to initialize once after initial population
+                     // observer.disconnect(); 
+                }
+               
+                return; // Exit after processing this mutation
             } else if (mutation.type === 'childList' && mutation.target.classList.contains('carousel') && mutation.addedNodes.length > 0) {
-                 initLightbox(); // Also initialize if carousel items are added dynamically
+                 // If carousel items are added dynamically, re-initialize lightbox
+                 const imagesAdded = Array.from(mutation.addedNodes).some(node => 
+                    node.tagName === 'IMG' || node.querySelector('img')
+                );
+                 if (imagesAdded) {
+                     initLightbox();
+                 }
                  return;
             }
         }
@@ -456,12 +496,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const galleryGrid = document.querySelector('.gallery-grid');
     const carouselContainer = document.querySelector('.carousel');
     
-    if(galleryGrid) observer.observe(galleryGrid, { childList: true });
-    if(carouselContainer) observer.observe(carouselContainer, { childList: true });
+    if(galleryGrid) observer.observe(galleryGrid, { childList: true, subtree: true }); // Observe subtree as well
+    if(carouselContainer) observer.observe(carouselContainer, { childList: true, subtree: true }); // Observe subtree as well
 
 
     initHamburgerMenu();
     initHeroSlideshow();
     initCarousel();
     
+    // Initial call to initLightbox in case images are already in the DOM on load
+    initLightbox();
 }); 
